@@ -157,6 +157,7 @@
       small
       fab
       color="indigo"
+      @click="editItem(item.id)"
     >
       <v-icon>mdi-pencil</v-icon>
     </v-btn>
@@ -175,6 +176,112 @@
       </tbody>
     </template>
   </v-simple-table>
+
+  <!-- update modal -->
+<v-dialog
+      v-model="dialog_edit"
+      persistent
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="headline">Update Expenses</span>
+        </v-card-title>
+        <v-form v-model="valid" @submit.prevent="handleSubmitEdit">
+        <v-card-text>
+          <v-container>
+            <v-row>
+              <v-col cols="12">
+                <v-select
+                :items="categories"
+                item-value="id" 
+                item-text="name"
+                label="Expense Category"
+                v-model="category"
+                ></v-select>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="amount"
+                  label="Amount*"
+                  required
+                ></v-text-field>
+              </v-col>
+              <v-col
+                cols="12"
+                sm="6"
+                md="4"
+              >
+                <v-menu
+                  ref="menu"
+                  v-model="menu"
+                  :close-on-content-click="false"
+                  :return-value.sync="date"
+                  transition="scale-transition"
+                  offset-y
+                  min-width="290px"
+                >
+                  <template v-slot:activator="{ on, attrs }">
+                    <v-text-field
+                      v-model="entry_date"
+                      label="Picker in menu"
+                      prepend-icon="mdi-calendar"
+                      readonly
+                      v-bind="attrs"
+                      v-on="on"
+                    ></v-text-field>
+                  </template>
+                  <v-date-picker
+                    v-model="entry_date"
+                    no-title
+                    scrollable
+                  >
+                    <v-spacer></v-spacer>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="menu = false"
+                    >
+                      Cancel
+                    </v-btn>
+                    <v-btn
+                      text
+                      color="primary"
+                      @click="$refs.menu.save(date)"
+                    >
+                      OK
+                    </v-btn>
+                  </v-date-picker>
+                </v-menu>
+              </v-col>
+            </v-row>
+          </v-container>
+          <small>*indicates required field</small>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="dialog_edit = false"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="dialog_edit =false"
+            type="submit"
+          >
+            Save
+          </v-btn>
+          
+        </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+<!-- ./update modal end -->
+
     </div>
 
 </template>
@@ -198,6 +305,8 @@ import {mapGetters} from 'vuex'
         menu: false,
         modal: false,
         menu2: false,
+        dialog_edit:false,
+        selected_id:''
       }
     },
     async created(){
@@ -222,6 +331,25 @@ import {mapGetters} from 'vuex'
         },
         deleteItem(id){
           axios.delete('expenses/'+id).then(this.$router.push('/expenses'))
+        },
+        async editItem(id){
+          const selected_item = await axios.get('expenses/'+id)
+          // this.selectedItem = selected_item.data
+          this.category=selected_item.data.category
+          this.amount=selected_item.data.amount
+          this.entry_date= selected_item.data.entry_date
+          this.selected_id = selected_item.data.id
+          this.dialog_edit = true
+        },
+        async handleSubmitEdit(){
+        await axios.post('expenses/'+this.selected_id,{
+                category: this.category,
+                amount: this.amount,
+                entry_date: this.entry_date
+            }).then(
+                this.$router.push('/expenses')
+            )
+                
         }
     }
   }

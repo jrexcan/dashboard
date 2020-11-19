@@ -101,6 +101,7 @@
       small
       fab
       color="indigo"
+      @click="editItem(item.id)"
     >
       <v-icon>mdi-pencil</v-icon>
     </v-btn>
@@ -119,6 +120,66 @@
       </tbody>
     </template>
   </v-simple-table>
+
+<!-- update modal -->
+<v-dialog
+      v-model="dialog_edit"
+      persistent
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="headline">Update Role</span>
+        </v-card-title>
+        <v-form v-model="valid" @submit.prevent="handleSubmitEdit">
+        <v-card-text>
+          <v-container>
+            <v-row>
+                
+              <v-col cols="12">
+                <v-text-field
+                  label="Name*"
+                  required
+                  v-model="name"
+                >
+                </v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="description"
+                  label="Description*"
+                  required
+                >
+                </v-text-field>
+              </v-col>
+            </v-row>
+          </v-container>
+          <small>*indicates required field</small>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="dialog_edit = false"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="dialog_edit =false"
+            type="submit"
+          >
+            Save
+          </v-btn>
+          
+        </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+<!-- ./update modal end -->
+
     </div>
 
 </template>
@@ -137,6 +198,8 @@ import {mapGetters} from 'vuex'
         name:'',
         description:'',
         dialog: false,
+        dialog_edit:false,
+        selected_id:''
         // roles: [roles]
       }
     },
@@ -158,7 +221,25 @@ import {mapGetters} from 'vuex'
         },
         deleteItem(id){
           axios.delete('roles/'+id).then(this.$router.push('/roles'))
+        },
+        async editItem(id){
+          const selected_item = await axios.get('role/'+id)
+          // this.selectedItem = selected_item.data
+          this.name=selected_item.data.name
+          this.description=selected_item.data.description
+          this.selected_id = selected_item.data.id
+          this.dialog_edit = true
+        },
+        async handleSubmitEdit(){
+        await axios.post('roles/'+this.selected_id,{
+                name: this.name,
+                description: this.description,
+            }).then(
+                this.$router.push('/roles')
+            )
+                
         }
+
 
 
     }

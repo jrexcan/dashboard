@@ -135,6 +135,7 @@
       small
       fab
       color="indigo"
+      @click="editItem(item.id)"
     >
       <v-icon>mdi-pencil</v-icon>
     </v-btn>
@@ -153,6 +154,89 @@
       </tbody>
     </template>
   </v-simple-table>
+
+   <!-- update modal -->
+<v-dialog
+      v-model="dialog_edit"
+      persistent
+      max-width="600px"
+    >
+      <v-card>
+        <v-card-title>
+          <span class="headline">Update Expenses</span>
+        </v-card-title>
+        <v-form v-model="valid" @submit.prevent="handleSubmitEdit">
+        <v-card-text>
+          <v-container>
+            <v-row>
+                
+              <v-col cols="12">
+                <v-text-field
+                  label="Name*"
+                  required
+                  v-model="name"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="email"
+                  label="Email*"
+                  required
+                  type='email'
+                ></v-text-field>
+              </v-col>
+              <!-- <v-col cols="12">
+                <v-text-field
+                  v-model="password"
+                  label="Password*"
+                  required
+                  type='password'
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                  v-model="password_confirmation"
+                  label="Re-password*"
+                  required
+                  type='password'
+                ></v-text-field>
+              </v-col> -->
+              <v-col cols="12">
+                <v-select
+                :items="roles"
+                item-value="id" 
+                item-text="name"
+                label="Role"
+                v-model="role_id"
+                ></v-select>
+              </v-col>
+            </v-row>
+          </v-container>
+          <small>*indicates required field</small>
+        </v-card-text>
+        <v-card-actions>
+          <v-spacer></v-spacer>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="dialog_edit = false"
+          >
+            Close
+          </v-btn>
+          <v-btn
+            color="blue darken-1"
+            text
+            @click="dialog_edit =false"
+            type="submit"
+          >
+            Save
+          </v-btn>
+          
+        </v-card-actions>
+        </v-form>
+      </v-card>
+    </v-dialog>
+<!-- ./update modal end -->
     </div>
 
 </template>
@@ -174,6 +258,8 @@ import {mapGetters} from 'vuex'
         password_confirmation:'',
         role_id:'',
         dialog: false,
+        dialog_edit:false,
+        selected_id:''
       }
     },
     async created(){
@@ -199,6 +285,25 @@ import {mapGetters} from 'vuex'
         },
         deleteItem(id){
           axios.delete('users/'+id).then(this.$router.push('/users'))
+        },
+        async editItem(id){
+          const selected_item = await axios.get('user/'+id)
+          // this.selectedItem = selected_item.data
+          this.name=selected_item.data.name
+          this.email=selected_item.data.email
+          this.role_id = selected_item.role_id
+          this.selected_id = selected_item.data.id
+          this.dialog_edit = true
+        },
+        async handleSubmitEdit(){
+        await axios.post('users/'+this.selected_id,{
+                name: this.name,
+                email: this.email,
+                role_id: this.role_id
+            }).then(
+                this.$router.push('/users')
+            )
+                
         }
     }
   }
